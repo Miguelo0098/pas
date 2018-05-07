@@ -1,0 +1,14 @@
+Tema 1: Introducción a la Administración de sistemas.
+
+	Sistema informático
+		- Organización
+		- Informáticos
+			· Hardware
+			· Software
+		- Usuarios
+		- Directivos
+
+	Seguridad:
+		- Privacidad
+		- Integridad
+		- Disponibilidad

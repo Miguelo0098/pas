@@ -1,0 +1,146 @@
+Tema 2: Organización de un sistema operativo tipo GNU/Linux
+
+1. Ficheros
+	- En GNU/Linux, todo son ficheros ("si algo no es un fichero, entonces es un proceso"):
+		- Los programas u ordenes son ficheros:
+			/bin/ls, /usr/bin/find...
+		- Los dispositivos I/O son ficheros:
+			/dev/sda, /dev/fd0, /dev/tty0...
+		- Comunicación entre procesos: sockets o tuberías (pipes).
+		- Directorios, ficheros de datos, ficheros de configuración...
+		- El propio núcleo del sistema operativo (kernel).
+	- GNU/Linux tiene una estructura jerárquica de directorios, conocida como sistema de archivos:
+		- / --> directorio raíz
+		- Puede estar compuesto por varias particiones pertenecientes a varios dispositivos (discos duros, CDs, DVDs...).
+		- Todos disponibles desde la jerarquía de directorios.
+
+1.1 Sistemas de Ficheros:
+	- Guarda los ficheros del sistema.
+	- Se organiza de manera jerárquica, en directorios.
+	- No hay unidades.
+	- Aunque a nivel lógico, el sistema de ficheros parece un árbol, en realidad los ficheros se almacenan desorganizados por el disco duro.
+	- Un fichero puede tener sectores a lo largo de toda la superficie.
+	- Los nodos-i son metadatos sobre los ficheros que nos proporcionan información sobre aspectos como su tamaño, sus permisos, la posición de sus sectores, número de enlaces... El nombre del archivo está en la carpeta que lo contiene.
+	- Cada fichero tiene un nodo-i.
+	- Todos están localizados en un área del disco duro, que está limitada (nº máximo de nodos-i).
+
+1.2 Propietarios y Permisos
+	- El acceso a los ficheros se gestiona de la siguiente forma:
+		- Propietarios:
+			- Cada fichero tiene dos propietarios: usuario y grupo.
+			- chown --> cambia el usuario propietario (se necesitan privilegios de root).
+			- chgrp --> cambia el grupo propietario (puede hacerlo el propietario del fichero, el que pertenezca al grupo, o root).
+	- El acceso a los ficheros se gestiona de la siguiente forma:
+		- r: "Ver el contenido"/"Listar el contenido".
+		- w: "Modificar el contenido"/"Crear/eliminar ficheros".
+		- x: "Ejecutar el fichero"/"Entrar en el directorio".
+	- Se establecen independientemente para: el usuario propietario (u), usuarios del grupo propietario (g) y el resto de usuarios  (o).
+	- Otros comandos: adduser, addgroup...
+	- Permisos especiales:
+		- t: sticky bit, chmod o+t fichero.
+			- El comando ls lo representa como una t en el noveno bit (según mayúscula/minúscula, t --> o+x, T --> o-x).
+			- Para ejecutables --> mantener la imagen del fichero en la memoria de intercambio después de finalizar la ejecutión del mismo (en desuso).
+			- Para directorios -->solo root o el propietario de un fichero (o de la carpeta) pueden borrar o renombrar el fichero, aunque tengan permiso de escritura en la carpeta.
+		- s: para usuarios, suid, chmod u+s fichero.
+			- El comando ls lo representa como una s en el tercer bit (según mayúscula/minúscula, s --> u+x, S --> u-x).
+			- Para ejecutables --> cambio de dominio a nivel de usuario. Durante la ejecución, el usuario efectivo del proceso es el propietario del fichero y no el usuario que lo ejecutó.
+			- Para directorios --> Ignorado.
+		- S: para grupos, sgid, chmod g+s fichero.
+			- El comando ls lo representa como una s en el sexto bit (según mayúscula/minúscula, s→ g+x, S→ g-x).
+	- Máscara de permisos (umask)
+		- Cuando un fichero nuevo se crea, se le asignan permisos.
+		- Los permisos se deciden aplicando una máscara de permisos a los permisos base (que se pueden consultar/modificar utilizando el comando umask).
+		- La máscara de bits indica con un 1 aquellos bits que deberán ser 0 en la cadena de permisos, es decir, indica qué permisos están restringidos.
+		- Los permisos base para directorios son 777; para ficheros, 666.
+		- ¿Podremos especificar una máscara que permita crear ficheros con permisos de ejecución?
+1.3 Tipos de ficheros (ls -l)
+	- Normal.
+	- Directorio (d): son ficheros que contienen enlaces a otros ficheros (ya sean ficheros o archivos normales).
+	- Especial de bloque (b) : fichero especial para interactuar con un dispositivo basado en bloques.
+	- Especial de carácter (c): fichero especial para interactuar con un dispositivo basado en bloques.
+	- Named Pipes (p): tubería FIFO con nombre (comunicación de procesos de diferentes usuarios con tuberías).
+	- Socket (s): como los pipes pero con comunicación duplex. (ambos sentidos, ej. /tmp/.X11-unix/X0).
+	- Enlace físico.
+	- Enlace simbólico (1).
+	- Enlaces:
+		- Archivos especiales que permiten que varios nombres (enlaces) se asocien a un único e idéntico archivo.
+		- Varias instancias de un mismo archivo en diversos lugares de la estructura jerárquica sin necesidad de copiarlos.
+		- Ayuda a asegurar la coherencia y ahorrar espacio en el disco.
+		- Grupo de personas trabajando sobre un mismo fichero (modificaciones centralizadas).
+		- Enlaces físicos (ln archivo-real enlace-físico):
+			- Representan un nombre alternativo para un archivo (dos nombres de fichero apuntando al mismo nodo-i).
+			- Si eliminamos un enlace físico, no eliminamos el archivo original. Mientras quede al menos un enlace físico, el archivo no se elimina.
+			- Sólo es posible entre ficheros que estén en la misma partición.
+			- No se pueden realizar a directorios.
+		- Enlaces simbólicos (ln -s archivo-real enlace-simb):
+			- Es un puntero viertual al archivo real.
+			- Fichero de texto (con su nodo-i independiente) que contiene la ruta del archivo al que apunta.
+			- Si se elimina el enlace simbólico, no se elimina el fichero original.
+			- Observad conteo de referencias (tercera columna, después de permisos).
+
+2. Procesos
+	- Procesos: son programas en ejecución.
+	- Los atributos de un proceso son:
+		- PID: identificador del proceso.
+		- PPID: identificador del proceso padre.
+		- Nice number: prioridad asignada al ejecutarlo.
+		- TTY: terminal en el que se está ejecutando.
+		- RUID: identificador del usuario real, el que lo ejecutó.
+		- EUID: identificador del usuario efectivo, si hay cambio de dominio se refleja aquí (permiso suid).
+		- RGID: identificador del grupo real, el grupo del usuario que lo ejecutó.
+		- EGID: identificador del grupo efectivo, si hay cambio de dominio se refleja aquí (permiso sgid).
+	- Atributos de un proceso: ps -Fl PID
+	- Tipos de procesos:
+		- Interactivos: hay alguien conectado al sistema que los inicia (primer o segundo plano &).
+		- Encolados: procesos que se mandan a un buffer pera ser ejecutados (en una fecha concreta o cuando la carga del sistema sea baja).
+		- Demonios: programas ejecutados en segundo plano durante el arranque, que esperan de forma continua un determinado evento.
+
+3. Dispositivos
+	- Los dispositivos se representan/manejan como ficheros:
+		- Ficheros especiales de caracteres: representan a dispositivos de caracteres (cinta magnética, puerto paralelo, puerto serie...).
+		- Ficheros especiales de bloque: representan a dispositivos de bloques (disquete, partición de un disco duro o un pendrive...).
+		- Escribir/leer en un dispositivo se convierte en escribit/leer en el fichero correspondiente.
+	- Esos ficheros se almacenan en el directorio /dev:
+		- /dev/fd0: disquete de la primera disquetera.
+		- /dev/sda: primer disco duro (sin considerar particiones).
+		- /dev/sda1: primera partición del primer disco.
+		- /dev/sdb: segundo disco duro.
+		- /dev/sdc: disco USB (primer nombre de dispositivo libre).
+		- /dev/tty1: primera terminal de consola (tty2 segunda).
+		- /dev/lp0: primer puerto paralelo.
+		
+4. Estructura genérica del sistema de ficheros
+	- Filesystem Hierarchy Standard: Jerarquía Estándar del Sistema de Ficheros.
+	- Especificación estándar para sistemas tipo Unix.
+	- Fruto del consenso entre la comunidad (desarrolladores, administradores...).
+	- Versión 3.0 (2015), especificación disponible en la URL: http://wiki.linuxfoundation.orf/en/FHS
+	- En Linux, disponible como página de manual: man hier.
+	- Existen dos tipos de distinciones cuando hablamos del tipo de contenido de un directorio: estáticos/dinámicos y compartibles/no compartibles.
+	- /bin: ficheros ejecutables básicos compartidos (mv, cp).
+	- /dev: ficheros especiales de dispositivos.
+	- /etc: la mayoría de los ficheros de configuración locales del sistema (solo archivos de texto).
+	- /root: directorio HOME del administrador.
+	- /sbin: ficheros ejecutables que normalmente sólo el administrador puede ejecutar.
+	- /home: los directorios de trabajo de los usuarios.
+	- /lost+found: contiene "referencias" a los ficheros marcados como erróneos al chequear el sistema de ficheros.
+	- /lib: librerías necesarias para ejecutar los archivos.
+	- /proc y /sys: sistemas de ficheros virtuales, contienen información sobre procesos, núcleos, módulos cargados, dispositivos, sucesos...
+	- /tmp: ficheros temporales. Tienen el permiso t activo.
+	- /var: ficheros variables: colas de datos (spool) de impresión, e-mail..., ficheros del cron, atd, ficheros de log...
+	- /boot: núcleo y ficheros necesarios para cargar el núcleo y ficheros de configuración del gestor de arranque.
+	- /mnt, /mount o /media: montaje de otros sistemas de ficheros: disquetes, cdroms...
+		- /mnt/floppy o /media/floppy.
+		- /mnt/cdrom o /media/cdrom.
+	- /opt: paquetes de aplicaciones estáticas (no actualizables).
+	- /usr: contiene subdirectorios de solo lectura, que no deben ser específicos de la máquina que los usa (Unix system resources):
+		- /usr/bin: ficheros ejecutables por todos los usuarios.
+		- /usr/sbin: ficheros ejecutables de administración.
+		- /usr/include: ficheros cabecera de cabecera estándar para compilación.
+		- /usr/lib: librerías binarias.
+		- /usr/local: software local específico.
+		- /usr/share: datos compartidos (independientes de la arquitectura: imágenes, ficheros de texto...).
+			- /usr/share/man.
+			- /usr/share/doc.
+		- /usr/src: código fuente, como el del kernel...
+	- Estáticos: /bin, /sbin, /opt, /boot, /usr/bin...
+	- Dinámicos: 

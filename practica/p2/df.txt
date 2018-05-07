@@ -1,0 +1,14 @@
+S.ficheros     bloques de 1K  Usados Disponibles Uso% Montado en
+udev                 3993048       0     3993048   0% /dev
+tmpfs                 804036   28328      775708   4% /run
+/dev/sda4           76859140 8801380    64110496  13% /
+tmpfs                4020172   33856     3986316   1% /dev/shm
+tmpfs                   5120       4        5116   1% /run/lock
+tmpfs                4020172       0     4020172   0% /sys/fs/cgroup
+/dev/loop0             83584   83584           0 100% /snap/core/4110
+/dev/loop1            128256  128256           0 100% /snap/discord/52
+/dev/loop2            143232  143232           0 100% /snap/slack/4
+/dev/loop3             97152   97152           0 100% /snap/telegram-desktop/54
+/dev/loop4            166528  166528           0 100% /snap/spotify/6
+/dev/sda1             520192   29324      490868   6% /boot/efi
+tmpfs                 804032    2900      801132   1% /run/user/1000

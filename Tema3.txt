@@ -1,0 +1,72 @@
+Tema 3: Arranque y parada del sistema
+
+1. Introducción
+	- Arranque y parada del sistema
+	- Procesos de arranque y de parada
+		- Arranque: el sistema se prepara para ser usado por los usuarios.
+		- Parada: el sistema se deja consistente (p.ej. vaciar la caché).
+	- El administrador deberá saber qué ficheros controlan estos procesos y cómo lo hacen, para reconocer situaciones de error y solucionarlas.
+	- Procesos sencillos: se basan en un conjunto de ficheros de configuración y de guiones shell que determinan y controlan los procesos.
+
+2. Proceso de arranque del sistema
+
+2.1 Proceso de arranque
+	- Dos fases:
+		- Arranque del hardware.
+		- Arranque del Sistema Operativo (SO).
+	- Al arrancar el ordenador --> señal eléctrica (RESET) que inicializa todos los registros a valores por defecto.
+	- Se carga la dirección de inicio del iniciador ROM.
+	- La memoria ROM contiene, además, el software de configuración del hardware del sistema (BIOS).
+	
+	2.1.1 Iniciador ROM:	
+		- Programa de arranque independiente del SO (ROM). 3 funciones:
+			- Comprueba el sistema, detectando sus características y comprobando su funcionamiento.
+			- Lee y almacena en memoria el programa cargado del SO.
+			- Pasa el control al cargador del SO, saltando a la dirección de memoria donde lo ha almacenado.
+	
+	2.1.2 Programa cargador
+		- El programa cargador (master boot program o boot program) está en los primeros sectores del disco y tiene un tamaño prefijado.
+		- Estos sectores se conocen como Master Boot Record (MBR, o Volume Boot Record).
+		- Es el encargado de cargar el núcleo (o kernel) del SO y pasarle el control.
+		- El iniciador ROM y el SO tienen un acuerdo sobre el programa cargador (ubicación, disco de arranque y tamaño).
+
+	2.1.3 Núcleo del SO
+		- El núcleo del SO continúa el proceso de arranque:
+			- Realiza una comprobación del hardware del sistema.
+			- Se prepara a sí mismo para ejecutar el sistema inicializando sus tablas internas, creando estructuras de datos necesarias, etc.
+			- A continuación crea el proceso Init y le pasa el control.
+		- El núcleo (Linux) es cargado inicialmente en memoria, y permanece de manera residente durante el funcionamiento del sistema, controlando la ejecución del resto de software (GNU).
+		- Parte de este código se encuentra en módulos del núcleo:
+			- Minimizar la cantidad de código que se carga en memoria.
+			- Maximizar la modularidad.
+
+	2.1.4 initrd (Init RAM Disk)
+		- Las características del arranque pueden implicar que el medio desde el que se carga el núcleo provenga de un sistema de ficheros concreto (p.ej. ext3) o incluso desde la red.
+		- Para ello, se necesitarán módulos específicos, alojados en el initrd.
+		- El programa cargador le dice al núcleo la posición del initrd.
+		- initrd evolucionó a initramfs, permitiendo un tamaño de disco variable y no ser necesario hacer un disco virtual para el núcleo.
+		- Funcionamiento:
+			- El núcleo carga primero el initrd.
+			- Utilizando el initrd, se cargan los módulos necesarios.
+			- Entonces el núcleo continuará el proceso de arranque.
+
+	2.1.5 Proceso Init
+		- El proceso Init termina el proceso de arranque, dejando el sistema en modo multiusuario, preparado para que los usuarios trabajen en él.
+		- Usa una serie de scripts que le indican las acciones a realizar.
+		- Tareas que realiza el proceso Init:
+			- Chequea los sistemas de ficheros.
+			- Monta los sistemas de ficheros permanentes.
+			- Activa las áreas de swapping o intercambio.
+			- Activa los demonios y la red (NFS, NIS, etc.).
+			- Limpia los sistemas de ficheros (borra los directorios temporales).
+			- Habilita el login a los usuarios del sistema.
+
+2.2 Programa cargador: GRUB (GRand Unified Bootloader)
+	- Grub se instala en el master boot record (MBR) y hace de las funciones de master boot program (MBP, programa cargador). 
+	- Pregunta qué SO arrancar: p.ej. Linux o Windows.
+		- Si la respuesta es Linux --> carga el núcleo solicitado y le pasa el control para que el arranque continúe. 
+		- Si la respuesta es Windows --> pasa el control a Windows que realiza su arranque.
+	- GRUB 2.0: desde el año 2009.
+		- Archivo fundamental de configuración: /boot/grub/grub.cfg
+		- No editar a mano.
+		- Este archivo se genera a partir del comando sudo update-grub2

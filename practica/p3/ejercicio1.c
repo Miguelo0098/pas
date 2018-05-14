@@ -48,17 +48,17 @@ int main (int argc, char **argv)
 		{
 			case 'u':
 				//printf("Opción -a\n");
-				aflag=1;
+				uvalue = optarg;
 				break;
 
 			case 'i':
 				//printf("Opción -b\n");
-				bflag=1;
+				ivalue = optarg;
 				break;
 
 			case 'g':
 				//printf("Opción -c con valor '%s'\n", optarg);
-				cvalue = optarg;
+				gvalue = optarg;
 				break;
 
 			case 'd':
@@ -68,22 +68,22 @@ int main (int argc, char **argv)
 
 			case 's':
 				//printf("Opción -f con valor '%s'\n", optarg);
-				fvalue = optarg;
+				sflag = 1;
 				break;
 
 			case 'a':
 				//printf("Opción -f con valor '%s'\n", optarg);
-				fvalue = optarg;
+				avalue = optarg;
 				break;
 
 			case 'b':
 				//printf("Opción -f con valor '%s'\n", optarg);
-				fvalue = optarg;
+				bflag = 1;
 				break;
 
 			case 'h':
 				//printf("Opción -f con valor '%s'\n", optarg);
-				fvalue = optarg;
+				hflag = 1;
 				break;
 
 			case '?':

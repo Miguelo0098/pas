@@ -12,21 +12,27 @@ int main (int argc, char **argv)
 		/* Opciones que no van a actuar sobre un flag */
 		/* "opcion", recibe o no un argumento, 0,
 		   identificador de la opción */
-		{"add",	 no_argument,	   0, 'a'},
-		{"block",  no_argument,	   0, 'b'},
-		{"delete",  required_argument, 0, 'd'},
-		{"create",  required_argument, 0, 'c'},
-		{"file",	required_argument, 0, 'f'},
+		{"username", required_argument, 0, 'u'},
+		{"useruid",  required_argument,	   0, 'i'},
+		{"groupname",  required_argument, 0, 'g'},
+		{"groupid",  required_argument, 0, 'd'},
+		{"allgroups",	no_argument, 0, 's'},
+		{"allinfo",	required_argument, 0, 'a'},
+		{"bactive",	no_argument, 0, 'b'},
+		{"help",	no_argument, 0, 'h'},
 		/* Necesario para indicar el final de las opciones */
 		{0, 0, 0, 0}
 	};
 
 	/* Estas variables servirán para almacenar el resultado de procesar la línea de comandos */
-	int aflag = 0;
-	int bflag = 0;
-	char *cvalue = NULL;
+	char *uvalue = NULL;
+	char *ivalue = NULL;
+	char *gvalue = NULL;
 	char *dvalue = NULL;
-	char *fvalue = NULL;
+	int sflag = 0;
+	char *avalue = NULL;
+	int bflag = 0;
+	int hflag = 0;
 
 	/* getopt_long guardará el índice de la opción en esta variable. */
 	int option_index = 0;
@@ -40,17 +46,17 @@ int main (int argc, char **argv)
 			break;
 		switch (c)
 		{
-			case 'a':
+			case 'u':
 				//printf("Opción -a\n");
 				aflag=1;
 				break;
 
-			case 'b':
+			case 'i':
 				//printf("Opción -b\n");
 				bflag=1;
 				break;
 
-			case 'c':
+			case 'g':
 				//printf("Opción -c con valor '%s'\n", optarg);
 				cvalue = optarg;
 				break;
@@ -60,7 +66,22 @@ int main (int argc, char **argv)
 				dvalue = optarg;
 				break;
 
-			case 'f':
+			case 's':
+				//printf("Opción -f con valor '%s'\n", optarg);
+				fvalue = optarg;
+				break;
+
+			case 'a':
+				//printf("Opción -f con valor '%s'\n", optarg);
+				fvalue = optarg;
+				break;
+
+			case 'b':
+				//printf("Opción -f con valor '%s'\n", optarg);
+				fvalue = optarg;
+				break;
+
+			case 'h':
 				//printf("Opción -f con valor '%s'\n", optarg);
 				fvalue = optarg;
 				break;

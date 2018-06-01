@@ -70,3 +70,115 @@ Tema 3: Arranque y parada del sistema
 		- Archivo fundamental de configuración: /boot/grub/grub.cfg
 		- No editar a mano.
 		- Este archivo se genera a partir del comando sudo update-grub2
+	- Contenidos de la carpeta /etc/grub.d/:
+		- 00_header: cabeceras, no se suele modificar.
+		- 05_debian_theme: aspecto visual del menú: colores, temas, imagen de fondo...
+		- 10_linux: contiene comandos y scripts que se encargan del kernel Linux de la partición principal (se incluyen todos los núcleos presentes en /boot).
+		- 20_*: Aplicaciones third party.
+		- 30_os-prober:Este archivo contiene comandos y scripts que se encargan de otros sistemas operativos.
+	- Fichero /etc/default/grub:
+		- Este fichero sí es editable
+	- Reinstalar GRUB: sudo grub-install /dev/sda.
+	- GRUB permite: 
+		- Editar las entradas.
+		- Consola interactiva GRUB.
+		- Terminología de GRUB, numerando los dispositivos según los reconozca la BIOS empezando en cero.
+
+2.3 Modo monousuario
+	- Estado del sistema definido para realizar tareas administrativas de mantenimiento, que requieren un control completo y no compartido.
+	- Solo realiza el montaje del sistema de ficheros raíz, los otros SF están disponibles, pero no están montados.
+	- Se puede acceder a todo el sistema, pero solo se ejecutan los demonios necesarios, muchas utilidades no están activas y solo las ordenes del SF raíz están disponibles.
+	- Para entrar en modo monousuario el proceso Init crea el shell por defecto como usuario root, pidiendo la contraseña para dejar entrar al sistema.
+	-¿Cómo se entra en modo monousuario?
+		- Indicandolo manualmente al MBR con una opción o parámetro: mediante la interfaz de edición de GRUB, opción single a la entrada del núcleo.
+		- Automáticamente, si hay problemas en el proceso de arranque que el sistema no puede solucionar por sí solo.
+	- PROBLEMA: si cambiamos las opciones de GRUB y ponemos init=/bin/sh, no se pide la contraseña.
+		- Permite tener acceso a todo el sistema, estando delante del ordenador.
+	- SOLUCIÓN: no existe, salvo utilizar cifrado de ficheros.
+	- Se puede paliar --> solicitar contraseña para la entrada de administración.
+
+2.4 Modo multiusuario
+	- Pasos del proceso de arranque:
+		1- Chequea el sistema de ficheros raíz con fsck.
+			- Si al apagar el sistema, el sistema de ficheros se desmontó correctamente, no se chequea.
+			- Sin embargo, algunos SO con determinados SFs fuerzan el chequeo siempre, o cada cierto tiempo (cada 3 meses) o cada cierto número de montajes sin chequear (cada 20 veces).
+			- Si fsck encuentra problemas que no puede solucionar "solo", lleva al sistema a modo monousuario para que el administrador realice el chequeo manual.
+		2- Monta el sistema de ficheros raíz en modo lectura-escritura.
+		3- Chequea el resto de SFs con fsck (idem al punto 1).
+		4- Monta el resto de SFs.
+		5- Activa las particiones de intercambio (swapping): swapon -a.
+		6- Activa las cuotas de disco: quotacheck -a y quotaon -a.
+		7- Lanza los procesos servidores o demonios: crond, atd, cupsd, syslogd...
+		8- Activa la red.
+		9- Lanza los demonios de red: xinetd, apache2, nagiosd, sshd, ntpd, nfsd, rpc.mountd, slapd...
+		10- Limpia los sistemas de ficheros: /tmp, etc.
+		11- Permite que los usuarios entren:
+			- Crea las terminales, lanzando getty en modo texto, y el terminal gráfico, si es preciso.
+			- Borra, en caso de que exista, el fichero /etc/nologin: Si el fichero /etc/nologin existe, los usuarios (excepto root) no pueden entrar al sistema. Algunos sistemas lo crean al iniciar el arranque.
+
+2.5 Niveles de ejecución en GNU/Linux
+	- El SO puede estar en distintos niveles de ejecución.
+	- En GNULinux, los niveles de ejecución son:
+		- Nivel 0: Sistema apagado.
+		- Nivel 1, s o S: Modo monousuario, rescue o troubleshooting.
+		- Nivel 2: Modo multiusuario sin funciones de red.
+		- Nivel 3: Modo multiusuario con funciones de red y terminales de texto.
+		- Nivel 4: Sin usar, a redefinir por el administrador.
+		- Nivel 5: Modo multiusuario con funciones de red e inicio de sesión gráfico.
+		- Nivel 6: Sistema reiniciándose.
+	- En Debian, por defecto, los niveles 2 a 5 son todos modo multiusuario con todas las funciones.
+	- /sbin/runlevel --> saber en qué nivel está el sistema.
+	- /sbin/telinit --> cambiar de nivel de ejecución:
+		- telinit 1 --> a modo monousuario.
+		- telinit 6 --> reiniciar el sistema.
+		- telinit 3 --> cambiar al nivel 3.
+	- El nivel por defecto, establecido al arrancar, se encuentra:
+		- En el fichero /etc/inittab
+				id:2:initdefault:
+		- O en el fichero /etc/init/rc-sysinit.conf (upstart)
+				env DEFAULT_RUNLEVEL=2
+	- Al arrancar mediante GRUB, al núcleo se le puede pasar como parámetro un número indicando el nivel en el que queremos arrancar. En este caso se obviará el nivel por defecto.
+
+2.6 Ficheros de inicialización
+	- Personalizar niveles de ejecución --> carpetas /etc/rc?.d/ donde ? es el nivel de ejecución.
+	- Todos ellos son ejecutados por Init durante el arranque.
+	- Se ejecutan al arrancar o al cambiar de nivel:
+		- El nombre del script empieza por S o K, seguido de dos dígitos y un nombre descriptive:
+			K35smb, K15httpd, S40atd...
+		- Los ejecuta en orden alfabético, primero los K, después los S, los dos dígitos establecen el orden entre todos los K y todos los S.
+		- Ficheros K: detienen demonios o matan procesos.
+		- Ficheros S: lanzan demonios o ejecutan funciones de inicio.
+		- Para cada nivel de inicialización, se especifica qué demonios tienen que estar activos o no.
+	- Carpetas /etc/rc?.d/:
+		- Todos los ficheros son enlaces simbólicos al fichero con el mismo nombre descriptivo localizado en /etc/init.d.
+		- Los scripts reciben varios parámetros: start, stop, restart...
+		- Esto permite lanzar o relanzar demonios sin reiniciar el sistema.
+		- rc ejecuta los ficheros K con el parámetro stop y los S con start.
+		- Estos scripts se mantienen por retrocompatibilidad, se tiende a utilizar upstart y el comando service: muchos de los scripts simplemente llaman a upstart.
+
+2.7 Upstart
+	- upstart --> proceso de arranque/parada del sistema basado en eventos, reemplazo del clásico Init (aunque los ficheros siguen denominándose init).
+	- Este proceso realiza, de forma asíncrona, las siguientes tareas: 
+		- Dirige el inicio de las tareas y demonios.
+		- Controla los demonios mientras el sistema está encendido.
+		- Detiene los demonios durante el proceso de apagado.
+	- En el directorio /etc/init hay una serie de ficheros de configuración de eventos (evento.conf) que Init ejecuta según el orden y las dependencias establecidas en los mismos.
+	- Estos eventos indican qué tarea ejecutar, cuándo y cómo, mediante su propio lenguaje.
+	- initctl --> permite al administrador interactuar con Init, para decirle que realiza determinadas acciones:
+		start evento 	stop evento 	status evento
+	- Ficheros de configuración de eventos (.conf):
+		- exec <orden> <argumentos> --> ejecuta la orden con los argumentos indicados.
+		- script ... end script --> ejecutar el guión shell indicado:
+		- start on <event> --> describe bajo qué condiciones se lanzará ese evento.
+		- stop on <event> --> describe bajo qué condiciones se parará ese evento.
+		- respawn --> volver a lanzar ese proceso o demonio cuando se pare.
+		- sonsole --> hacia donde redirigir la salida del evento.
+		- pre-start --> ejecutar la orden/guión shell antes de lanzar ese proceso.
+		- pre-stop --> ejecutar la orden/guión shell antes de parar ese proceso.
+		- post-start --> ejecutar la orden/guión shell después de lanzar ese proceso.
+		- post-stop --> ejecutar la orden/guión shell después de parar ese proceso.
+
+	2.7.1 Systemd
+		- Es un reemplazo del proceso Init que viene incorporándose en GNU/Linux desde el año 2015.
+		- Amplia funcionalidades, pudiendo gestionar cosas que Init no gestiona, como por ejemplo un sistema de logs.
+
